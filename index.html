@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>זמני היום · תל אביב</title>
+<meta name="description" content="זמני היום ושבת לתל אביב לפי שיטת חב״ד">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#26213a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="זמני היום">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: one narrow column, phone-first. Daily times as a ledger of big numerals; Shabbat as its own block below. */
+:root{
+  --bg:#f3f1ec; --surface:#ffffff; --fg:#1d1a26; --muted:#6b6676; --line:#e2ded6;
+  --accent:#b4531f; --accent-soft:#f6e3d6; --night:#26213a; --night-fg:#f6efe4; --candle:#e7a83e;
+  --display:"Frank Ruhl Libre","David Libre",Georgia,serif;
+  --body:"Assistant","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14121b; --surface:#1d1a27; --fg:#efeae0; --muted:#9e97ab; --line:#2e2a3a;
+  --accent:#f0915a; --accent-soft:#3a2620; --night:#2b2541; --night-fg:#f6efe4; --candle:#f0b44f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14121b; --surface:#1d1a27; --fg:#efeae0; --muted:#9e97ab; --line:#2e2a3a;
+  --accent:#f0915a; --accent-soft:#3a2620; --night:#2b2541; --night-fg:#f6efe4; --candle:#f0b44f; color-scheme:dark}
+html,body{background:var(--bg)}
+body{color:var(--fg);font-family:var(--body);font-size:16px;direction:rtl}
+.wrap{max-width:480px;margin:0 auto;padding-inline:16px;padding-block:18px 28px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.date{display:flex;flex-direction:column;gap:2px;text-align:center;flex:1;min-width:0}
+.heb{font-family:var(--display);font-weight:700;font-size:1.55rem;line-height:1.15;text-wrap:balance}
+.greg{color:var(--muted);font-size:.95rem}
+.nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:1.4rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+.nav:focus-visible,.today:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.city{display:flex;justify-content:center;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;letter-spacing:.02em}
+.today{border:0;background:var(--accent-soft);color:var(--accent);font:inherit;font-weight:700;padding:3px 12px;border-radius:99px;cursor:pointer}
+.ledger{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:14px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.label{font-weight:600;font-size:1.08rem;min-width:0}
+.sub{display:block;color:var(--muted);font-weight:400;font-size:.85rem;margin-top:2px}
+.time{font-family:var(--display);font-weight:900;font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums;direction:ltr;letter-spacing:-.01em}
+.row.past .time,.row.past .label{color:var(--muted)}
+.row.past .time{font-weight:500}
+.row.next{background:var(--accent-soft)}
+.row.next .time{color:var(--accent)}
+.row.next .sub{color:var(--accent);font-weight:600}
+.shabbat{background:var(--night);color:var(--night-fg);border-radius:18px;padding:18px 18px 20px;display:flex;flex-direction:column;gap:14px}
+.sh-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sh-title{font-family:var(--display);font-weight:700;font-size:1.3rem}
+.sh-parasha{opacity:.75;font-size:.9rem}
+.sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sh-cell{display:flex;flex-direction:column;gap:6px}
+.sh-label{font-size:.95rem;opacity:.85;display:flex;align-items:center;gap:6px}
+.flame{width:8px;height:12px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--candle);box-shadow:0 0 10px var(--candle)}
+.star{width:9px;height:9px;background:var(--night-fg);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+.sh-time{font-family:var(--display);font-weight:900;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+.sh-day{font-size:.85rem;opacity:.7}
+.sh-parsha{border-top:1px solid color-mix(in srgb,var(--night-fg) 22%,transparent);padding-top:12px;font-family:var(--display);font-weight:700;font-size:1.45rem;text-align:center}
+footer{color:var(--muted);font-size:.8rem;line-height:1.5;text-align:center}
+footer a{color:inherit}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.install{position:fixed;inset-inline:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;justify-content:space-between;box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+.install p{margin:0;font-size:.95rem;min-width:0}
+.install .btns{display:flex;gap:8px;flex-shrink:0}
+.install button{font:inherit;font-weight:700;border-radius:99px;padding:8px 16px;cursor:pointer;border:0}
+.install .go{background:var(--accent);color:#fff}
+.install .x{background:transparent;color:var(--muted)}
+.has-install .wrap{padding-bottom:96px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="nav" id="prev" aria-label="יום קודם">›</button>
+    <div class="date"><div class="heb" id="heb"></div><div class="greg" id="greg"></div></div>
+    <button class="nav" id="next" aria-label="יום הבא">‹</button>
+  </header>
+  <div class="city"><span>תל אביב · שיטת חב״ד</span><button class="today" id="today" hidden>חזרה להיום</button></div>
+
+  <section class="ledger" id="ledger" aria-label="זמני היום"></section>
+
+  <section class="shabbat" aria-label="זמני שבת">
+    <div class="sh-head"><div class="sh-title" id="shTitle">שבת קודש</div><div class="sh-parasha" id="shDates"></div></div>
+    <div class="sh-grid">
+      <div class="sh-cell"><div class="sh-label"><span class="flame"></span>כניסת השבת</div><div class="sh-time" id="candle"></div><div class="sh-day">יום שישי</div></div>
+      <div class="sh-cell"><div class="sh-label"><span class="star"></span>צאת השבת</div><div class="sh-time" id="havdala"></div><div class="sh-day">מוצאי שבת</div></div>
+    </div>
+    <div class="sh-parsha" id="parsha" hidden></div>
+  </section>
+
+  <footer>הזמנים מחושבים בדף עצמו לפי שיטת החישוב של לוח <a href="https://www.chabad.org.il/Time/index.asp?CategoryID=176" target="_blank" rel="noopener">chabad.org.il</a>, ומתעדכנים אוטומטית כל יום.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@hebcal/core@5.8.0/dist/bundle.min.js"></script>
+<script>
+(function(){
+const LAT=32.0853, LON=34.7818, R=Math.PI/180, TZ="Asia/Jerusalem";
+// NOAA solar position
+function solar(jd){const T=(jd-2451545)/36525;
+ const L0=(280.46646+T*(36000.76983+T*0.0003032))%360, M=357.52911+T*(35999.05029-0.0001537*T);
+ const e=0.016708634-T*(0.000042037+0.0000001267*T);
+ const C=Math.sin(M*R)*(1.914602-T*(0.004817+0.000014*T))+Math.sin(2*M*R)*(0.019993-0.000101*T)+Math.sin(3*M*R)*0.000289;
+ const om=125.04-1934.136*T, lam=L0+C-0.00569-0.00478*Math.sin(om*R);
+ const eps=23+(26+(21.448-T*(46.815+T*(0.00059-T*0.001813)))/60)/60+0.00256*Math.cos(om*R);
+ const dec=Math.asin(Math.sin(eps*R)*Math.sin(lam*R))/R, y=Math.tan(eps*R/2)**2;
+ const eq=4*(y*Math.sin(2*L0*R)-2*e*Math.sin(M*R)+4*e*y*Math.sin(M*R)*Math.cos(2*L0*R)-0.5*y*y*Math.sin(4*L0*R)-1.25*e*e*Math.sin(2*M*R))/R;
+ return {dec,eq};}
+// UTC ms of the moment the sun is at `alt` degrees (rise=true morning, false evening) on civil date y-m-d
+function sun(y,m,d,alt,rise){const base=Date.UTC(y,m-1,d);let t=720-4*LON;
+ for(let i=0;i<3;i++){const {dec,eq}=solar(2440587.5+(base+t*60000)/864e5);
+  const H=Math.acos((Math.sin(alt*R)-Math.sin(LAT*R)*Math.sin(dec*R))/(Math.cos(LAT*R)*Math.cos(dec*R)))/R;
+  t=720-4*(LON+(rise?H:-H))-eq;}
+ return base+t*60000;}
+const MIN=60000, floorMin=ms=>Math.floor(ms/MIN)*MIN;
+
+function zmanim(y,m,d){
+  const netz=sun(y,m,d,-0.5,true);
+  const shkia=sun(y,m,d,-0.833,false);
+  const a=sun(y,m,d,-1.083,true), b=sun(y,m,d,-1.083,false);
+  const szks=a+3*(b-a)/12;
+  const tzeit=sun(y,m,d,-5.95,false);
+  return {netz:floorMin(netz),szks:floorMin(szks),shkia:floorMin(shkia),tzeit:floorMin(tzeit)};
+}
+function shabbat(y,m,d){ // y,m,d = the Friday
+  const fri=sun(y,m,d,-0.833,false)-22*MIN;
+  const s=new Date(Date.UTC(y,m-1,d+1));
+  const sat=sun(s.getUTCFullYear(),s.getUTCMonth()+1,s.getUTCDate(),-8.5,false);
+  return {candle:floorMin(fri),havdala:floorMin(sat)};
+}
+
+const fmtT=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false});
+const hm=ms=>fmtT.format(ms).replace(/^0/,"");
+function todayParts(){const p={};new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(Date.now()).forEach(x=>p[x.type]=x.value);return [+p.year,+p.month,+p.day];}
+
+// Hebrew date with gematria
+function gem(n){const L=[[400,"ת"],[300,"ש"],[200,"ר"],[100,"ק"],[90,"צ"],[80,"פ"],[70,"ע"],[60,"ס"],[50,"נ"],[40,"מ"],[30,"ל"],[20,"כ"],[10,"י"],[9,"ט"],[8,"ח"],[7,"ז"],[6,"ו"],[5,"ה"],[4,"ד"],[3,"ג"],[2,"ב"],[1,"א"]];
+ let s="";if(n%100===15){s="טו";n-=15}else if(n%100===16){s="טז";n-=16}
+ let out="";for(const [v,c] of L){while(n>=v){out+=c;n-=v}}out+=s;
+ return out.length>1?out.slice(0,-1)+"״"+out.slice(-1):out+"׳";}
+function hebDate(y,m,d){const dt=new Date(Date.UTC(y,m-1,d,12));const p={};
+ new Intl.DateTimeFormat("he-u-ca-hebrew",{timeZone:"UTC",day:"numeric",month:"long",year:"numeric"}).formatToParts(dt).forEach(x=>p[x.type]=x.value);
+ const day=parseInt(p.day,10), yr=parseInt(p.year,10)%1000;
+ return gem(day)+" ב"+p.month+" "+gem(yr);}
+
+const DAYS=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+let offset=0;
+const ROWS=[["netz","הנץ החמה","זריחה"],["szks","סוף זמן קריאת שמע",""],["shkia","שקיעת החמה",""],["tzeit","צאת הכוכבים",""]];
+const $=id=>document.getElementById(id);
+
+function until(ms){const m=Math.ceil((ms-Date.now())/MIN);if(m<60)return "בעוד "+m+" דק׳";const h=Math.floor(m/60),r=m%60;return "בעוד "+h+" שע׳"+(r?" ו-"+r+" דק׳":"");}
+
+function render(){
+  const [ty,tm,td]=todayParts();
+  const base=new Date(Date.UTC(ty,tm-1,td+offset));
+  const y=base.getUTCFullYear(),m=base.getUTCMonth()+1,d=base.getUTCDate(),dow=base.getUTCDay();
+  $("heb").textContent=hebDate(y,m,d);
+  $("greg").textContent="יום "+DAYS[dow]+" · "+d+"."+m+"."+y;
+  $("today").hidden=offset===0;
+  const z=zmanim(y,m,d), now=Date.now();
+  let nextKey=null;
+  if(offset===0){for(const [k] of ROWS){if(z[k]>now){nextKey=k;break}}}
+  $("ledger").innerHTML="";
+  for(const [k,label,sub] of ROWS){
+    const row=document.createElement("div");
+    row.className="row"+(offset===0&&z[k]<=now?" past":"")+(k===nextKey?" next":"");
+    const l=document.createElement("div");l.className="label";l.textContent=label;
+    const subText=k===nextKey?until(z[k]):sub;
+    if(subText){const s=document.createElement("span");s.className="sub";s.textContent=subText;l.appendChild(s);}
+    const t=document.createElement("div");t.className="time";t.textContent=hm(z[k]);
+    row.append(l,t);$("ledger").appendChild(row);
+  }
+  // Shabbat: on Saturday show this Shabbat, otherwise the coming one
+  const back=dow===6?1:-((5-dow+7)%7);
+  const f=new Date(Date.UTC(y,m-1,d-back));
+  const fy=f.getUTCFullYear(),fm=f.getUTCMonth()+1,fd=f.getUTCDate();
+  const sh=shabbat(fy,fm,fd);
+  $("candle").textContent=hm(sh.candle);
+  $("havdala").textContent=hm(sh.havdala);
+  const s=new Date(Date.UTC(fy,fm-1,fd+1));
+  $("shTitle").textContent=(dow===6?"השבת":(dow===5?"השבת":"שבת הקרובה"));
+  $("shDates").textContent=fd+"."+fm+" – "+s.getUTCDate()+"."+(s.getUTCMonth()+1);
+  $("parsha").hidden=true;
+  try{
+    const H=window.hebcal;
+    if(H){
+      const hd=new H.HDate(new Date(s.getUTCFullYear(),s.getUTCMonth(),s.getUTCDate()));
+      const r=H.getSedra(hd.getFullYear(),true).lookup(hd);
+      const names=r.parsha.map(p=>H.Locale.gettext(p,"he-x-NoNikud"));
+      $("parsha").textContent=r.chag?names.join(" "):"פרשת "+names.join("-");
+      $("parsha").hidden=false;
+    }
+  }catch(e){}
+}
+$("prev").onclick=()=>{offset--;render()};
+$("next").onclick=()=>{offset++;render()};
+$("today").onclick=()=>{offset=0;render()};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+setInterval(render,30000);
+render();
+window.__zmanim={zmanim,shabbat,hebDate};
+})();
+</script>
+
+<div class="install" id="install" hidden>
+  <p id="installText">אפשר להתקין את זמני היום כאפליקציה במסך הבית.</p>
+  <div class="btns"><button class="go" id="installGo">התקנה</button><button class="x" id="installX" aria-label="סגירה">✕</button></div>
+</div>
+<script>
+(function(){
+  const bar=document.getElementById("install"),go=document.getElementById("installGo"),x=document.getElementById("installX"),txt=document.getElementById("installText");
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  let dismissed=false;try{dismissed=localStorage.getItem("installDismissed")==="1"}catch(e){}
+  const show=()=>{bar.hidden=false;document.body.classList.add("has-install")};
+  const hide=()=>{bar.hidden=true;document.body.classList.remove("has-install")};
+  let deferred=null;
+  if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+  if(standalone||dismissed)return;
+  addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;show()});
+  addEventListener("appinstalled",hide);
+  go.onclick=async()=>{if(deferred){deferred.prompt();await deferred.userChoice;deferred=null;hide()}else hide()};
+  x.onclick=()=>{hide();try{localStorage.setItem("installDismissed","1")}catch(e){}};
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(ios){txt.textContent="להתקנה: לחץ על כפתור השיתוף ⬆︎ ובחר \"הוסף למסך הבית\".";go.textContent="הבנתי";show()}
+})();
+</script>
+
+</body>
+</html>
